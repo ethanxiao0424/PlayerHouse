@@ -9,7 +9,7 @@ public class PlaceableObject : MonoBehaviour
     private Vector3[] Vertices;
 
     /// <summary>
-    /// 取BoxCollider頂點local位置
+    /// 取BoxCollider頂點位置
     /// </summary>
     private void GetColliderVertexPositionsLocal()
     {

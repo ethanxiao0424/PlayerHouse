@@ -327,9 +327,6 @@ MonoBehaviour:
   whiteTile: {fileID: 11400000, guid: 47eceb1ec7e3b9c4d9c017ebb288d5b0, type: 2}
   prefab1: {fileID: 1500322242242810881, guid: 8ecf111a70e7b9745a9300bb30b9195c, type: 3}
   prefab2: {fileID: 1139477386561347582, guid: f759121c46c854d44b86dcd82647aa40, type: 3}
-  ground:
-    serializedVersion: 2
-    m_Bits: 64
 --- !u!1 &687453242
 GameObject:
   m_ObjectHideFlags: 0
@@ -462,7 +459,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
