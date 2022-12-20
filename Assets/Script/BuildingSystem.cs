@@ -10,13 +10,15 @@ public class BuildingSystem : MonoBehaviour
     public GridLayout gridLayout;
     private Grid grid;
 
-    [SerializeField] private Tilemap MainTilemap;
+    [SerializeField] private Tilemap GroundTilemap;
+    [SerializeField] private Tilemap LeftWallTilemap;
+    [SerializeField] private Tilemap RightWallTilemap;
     [SerializeField] private TileBase whiteTile;
 
     public GameObject prefab1;
     public GameObject prefab2;
 
-    private PlaceableObject objectToPlace;
+    [SerializeField] private PlaceableObject objectToPlace;
 
     #region Unity methods
 
@@ -28,15 +30,15 @@ public class BuildingSystem : MonoBehaviour
 
     private void Update()
     {
+
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            InitializeWithObject(prefab1);
+            if (objectToPlace == null) InitializeWithObject(prefab1);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            InitializeWithObject(prefab2);
+            if (objectToPlace == null) InitializeWithObject(prefab2);
         }
-
 
         if (!objectToPlace)
         {
@@ -44,28 +46,8 @@ public class BuildingSystem : MonoBehaviour
         }
 
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            objectToPlace.Rotate();
-        }
-        else if (Input.GetMouseButtonDown(0))
-        {
-            if (CanBePlaced(objectToPlace))
-            {
-                objectToPlace.Place();
-                Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
-                TakeArea(start, objectToPlace.Size);
-                objectToPlace = null;
-            }
-            else
-            {
-                Destroy(objectToPlace.gameObject);
-            }
-        }
-        else if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Destroy(objectToPlace.gameObject);
-        }
+        PlaceObject();
+
     }
 
     #endregion
@@ -77,7 +59,7 @@ public class BuildingSystem : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         //if(Physics.Raycast(ray,out RaycastHit raycastHit))
-        if(Physics.Raycast(ray,out RaycastHit raycastHit,100, 1<<6))
+        if (Physics.Raycast(ray, out RaycastHit raycastHit, 100, 1 << 6))
         {
             return raycastHit.point;
         }
@@ -105,12 +87,12 @@ public class BuildingSystem : MonoBehaviour
     /// <param name="area"></param>
     /// <param name="tilemap"></param>
     /// <returns></returns>
-    private static TileBase[] GetTilesBlock(BoundsInt area,Tilemap tilemap)
+    private static TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
     {
         TileBase[] array = new TileBase[area.size.x * area.size.y * area.size.z];
         int counter = 0;
 
-        foreach(var v in area.allPositionsWithin)
+        foreach (var v in area.allPositionsWithin)
         {
             Vector3Int pos = new Vector3Int(v.x, v.y, 0);
             array[counter] = tilemap.GetTile(pos);
@@ -123,7 +105,7 @@ public class BuildingSystem : MonoBehaviour
 
     #endregion
 
-    #region Building Placement
+    #region Building Placement 建築佈置
     /// <summary>
     /// 物件初始化
     /// </summary>
@@ -144,9 +126,9 @@ public class BuildingSystem : MonoBehaviour
         //area.size = new Vector3Int(area.size.x + 1, area.size.y + 1, area.size.z);
         area.size = new Vector3Int(placeableObject.Size.x + 1, placeableObject.Size.y + 1, placeableObject.Size.z);
 
-        TileBase[] baseArray = GetTilesBlock(area, MainTilemap);
+        TileBase[] baseArray = GetTilesBlock(area, GroundTilemap);
 
-        foreach(var b in baseArray)
+        foreach (var b in baseArray)
         {
             if (b == whiteTile)
             {
@@ -158,7 +140,38 @@ public class BuildingSystem : MonoBehaviour
 
     public void TakeArea(Vector3Int start, Vector3Int size)
     {
-        MainTilemap.BoxFill(start, whiteTile, start.x, start.y,start.x + size.x, start.y + size.y);
+        GroundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
+    }
+
+    #endregion
+
+
+    #region command 命令
+    
+    public void PlaceObject()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            if (CanBePlaced(objectToPlace))
+            {
+                objectToPlace.Place();
+                Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
+                TakeArea(start, objectToPlace.Size);
+                objectToPlace = null;
+            }
+            else
+            {
+                Destroy(objectToPlace.gameObject);
+            }
+        }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            objectToPlace.Rotate();
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Destroy(objectToPlace.gameObject);
+        }
     }
 
     #endregion
