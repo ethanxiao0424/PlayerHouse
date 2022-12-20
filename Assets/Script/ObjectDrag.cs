@@ -8,21 +8,21 @@ public class ObjectDrag : MonoBehaviour
     [SerializeField] private bool hangOnWall=false;
     private void Update()
     {
-        transform.position = BuildingSystem.current.SnapCoordinateToGrid(BuildingSystem.GetMouseWorldPosition());
+        //transform.position = BuildingSystem.current.SnapCoordinateToGrid(BuildingSystem.GetMouseWorldPosition());
     }
     private void Start()
     {
         
     }
 
-    //private void OnMouseDown()
-    //{
-    //    offset = transform.position - BuildingSystem.GetMouseWorldPosition();
-    //}
+    private void OnMouseDown()
+    {
+        offset = transform.position - BuildingSystem.GetMouseWorldPosition();
+    }
 
-    //private void OnMouseDrag()
-    //{
-    //    Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
-    //    transform.position = BuildingSystem.current.SnapCoordinateToGrid(pos);
-    //}
+    private void OnMouseDrag()
+    {
+        Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
+        transform.position = BuildingSystem.current.SnapCoordinateToGrid(pos);
+    }
 }

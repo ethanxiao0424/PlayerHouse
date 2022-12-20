@@ -9,8 +9,14 @@ public class BuildingSystem : MonoBehaviour
 
     public GridLayout Cur_gridLayout;
     [SerializeField] GridLayout groundGridLayout;
+    [SerializeField] GridLayout leftWallGridLayout;
+    [SerializeField] GridLayout rightWallGridLayout;
     private Grid grid;
+    private Grid groundGrid;
+    private Grid leftWallGrid;
+    private Grid rightWallGrid;
 
+    [SerializeField] private Tilemap Cur_groundTilemap;
     [SerializeField] private Tilemap groundTilemap;
     [SerializeField] private Tilemap leftWallTilemap;
     [SerializeField] private Tilemap rightWallTilemap;
@@ -23,7 +29,7 @@ public class BuildingSystem : MonoBehaviour
     [SerializeField] public PlaceableObject objectToPlace;
     [SerializeField] private bool HangOnTheWall;
 
-    
+
 
     #region Unity methods
 
@@ -31,6 +37,9 @@ public class BuildingSystem : MonoBehaviour
     {
         current = this;
         grid = Cur_gridLayout.gameObject.GetComponent<Grid>();
+        groundGrid = groundGridLayout.gameObject.GetComponent<Grid>();
+        leftWallGrid = leftWallGridLayout.gameObject.GetComponent<Grid>();
+        rightWallGrid = rightWallGridLayout.gameObject.GetComponent<Grid>();
     }
 
     private void Update()
@@ -43,6 +52,18 @@ public class BuildingSystem : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             if (objectToPlace == null) InitializeWithObject(prefab2);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SwitchGridLayout(leftWallGrid, leftWallTilemap, leftWallTilemap);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            SwitchGridLayout(rightWallGrid, rightWallTilemap, rightWallTilemap);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            SwitchGridLayout(groundGrid, groundTilemap, groundTilemap);
         }
 
         if (!objectToPlace)
@@ -64,10 +85,10 @@ public class BuildingSystem : MonoBehaviour
     /// </summary>
     /// <param name="_HangOnWall">可以掛牆上?</param>
     /// <returns></returns>
+
     public static Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
         //if (Physics.Raycast(ray, out RaycastHit raycastHit, 100, 1<<6))
         if (Physics.Raycast(ray, out RaycastHit raycastHit))
         {
@@ -136,7 +157,7 @@ public class BuildingSystem : MonoBehaviour
         //area.size = new Vector3Int(area.size.x + 1, area.size.y + 1, area.size.z);
         area.size = new Vector3Int(placeableObject.Size.x + 1, placeableObject.Size.y + 1, placeableObject.Size.z);
 
-        TileBase[] baseArray = GetTilesBlock(area, groundTilemap);
+        TileBase[] baseArray = GetTilesBlock(area, Cur_groundTilemap);
         foreach (var b in baseArray)
         {
             if (b == whiteTile)
@@ -149,14 +170,14 @@ public class BuildingSystem : MonoBehaviour
 
     public void TakeArea(Vector3Int start, Vector3Int size)
     {
-        groundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
+        Cur_groundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
     }
 
     #endregion
 
 
     #region command 命令
-    
+
     public void PlaceObject()
     {
         if (Input.GetKey(KeyCode.Space))
@@ -181,6 +202,13 @@ public class BuildingSystem : MonoBehaviour
         {
             Destroy(objectToPlace.gameObject);
         }
+    }
+
+    private void SwitchGridLayout(Grid _Grid, GridLayout _gridLayout, Tilemap _tilemap)
+    {
+            grid = _Grid;
+            Cur_gridLayout = _gridLayout;
+            Cur_groundTilemap = _tilemap;
     }
 
     #endregion
