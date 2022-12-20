@@ -31,7 +31,7 @@ public class PlaceableObject : MonoBehaviour
         for(int i = 0; i < vertices.Length; i++)
         {
             Vector3 worldPos = transform.TransformPoint(Vertices[i]);
-            vertices[i] = BuildingSystem.current.gridLayout.WorldToCell(worldPos);
+            vertices[i] = BuildingSystem.current.Cur_gridLayout.WorldToCell(worldPos);
         }
 
         Size = new Vector3Int(Mathf.Abs((vertices[0] - vertices[1]).x),
@@ -64,6 +64,37 @@ public class PlaceableObject : MonoBehaviour
 
         Vertices = vertices;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="LayerMask">物件放置的地方</param>
+    //public void Straight(int LayerMask=1<<6)
+    //{
+    //    if (LayerMask == 1 << 7)
+    //    {
+    //        transform.Rotate(new Vector3(-90, 0, 0));
+    //        Size = new Vector3Int(Size.y, Size.x, 1);
+    //        Vector3[] vertices = new Vector3[Vertices.Length];
+    //        for (int i = 0; i < vertices.Length; i++)
+    //        {
+    //            vertices[i] = Vertices[(i + 1) % Vertices.Length];
+    //        }
+    //        Vertices = vertices;
+    //    }
+        
+    //    else if (LayerMask == 1 << 8)
+    //    {
+    //        transform.Rotate(new Vector3(0, 0, 0));
+    //        Size = new Vector3Int(Size.y, Size.x, 1);
+    //        Vector3[] vertices = new Vector3[Vertices.Length];
+    //        for (int i = 0; i < vertices.Length; i++)
+    //        {
+    //            vertices[i] = Vertices[(i + 1) % Vertices.Length];
+    //        }
+    //        Vertices = vertices;
+    //    }
+    //}
 
     public virtual void Place()
     {

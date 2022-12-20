@@ -7,25 +7,30 @@ public class BuildingSystem : MonoBehaviour
 {
     public static BuildingSystem current;
 
-    public GridLayout gridLayout;
+    public GridLayout Cur_gridLayout;
+    [SerializeField] GridLayout groundGridLayout;
     private Grid grid;
 
-    [SerializeField] private Tilemap GroundTilemap;
-    [SerializeField] private Tilemap LeftWallTilemap;
-    [SerializeField] private Tilemap RightWallTilemap;
+    [SerializeField] private Tilemap groundTilemap;
+    [SerializeField] private Tilemap leftWallTilemap;
+    [SerializeField] private Tilemap rightWallTilemap;
     [SerializeField] private TileBase whiteTile;
 
     public GameObject prefab1;
     public GameObject prefab2;
 
-    [SerializeField] private PlaceableObject objectToPlace;
+
+    [SerializeField] public PlaceableObject objectToPlace;
+    [SerializeField] private bool HangOnTheWall;
+
+    
 
     #region Unity methods
 
     private void Awake()
     {
         current = this;
-        grid = gridLayout.gameObject.GetComponent<Grid>();
+        grid = Cur_gridLayout.gameObject.GetComponent<Grid>();
     }
 
     private void Update()
@@ -54,12 +59,17 @@ public class BuildingSystem : MonoBehaviour
 
 
     #region Utils
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_HangOnWall">¥i¥H±¾Àð¤W?</param>
+    /// <returns></returns>
     public static Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //if(Physics.Raycast(ray,out RaycastHit raycastHit))
-        if (Physics.Raycast(ray, out RaycastHit raycastHit, 100, 1 << 6))
+
+        //if (Physics.Raycast(ray, out RaycastHit raycastHit, 100, 1<<6))
+        if (Physics.Raycast(ray, out RaycastHit raycastHit))
         {
             return raycastHit.point;
         }
@@ -76,7 +86,7 @@ public class BuildingSystem : MonoBehaviour
     /// <returns></returns>
     public Vector3 SnapCoordinateToGrid(Vector3 position)
     {
-        Vector3Int cellPos = gridLayout.WorldToCell(position);
+        Vector3Int cellPos = Cur_gridLayout.WorldToCell(position);
         position = grid.GetCellCenterWorld(cellPos);
         return position;
     }
@@ -122,12 +132,11 @@ public class BuildingSystem : MonoBehaviour
     private bool CanBePlaced(PlaceableObject placeableObject)
     {
         BoundsInt area = new BoundsInt();
-        area.position = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
+        area.position = Cur_gridLayout.WorldToCell(objectToPlace.GetStartPosition());
         //area.size = new Vector3Int(area.size.x + 1, area.size.y + 1, area.size.z);
         area.size = new Vector3Int(placeableObject.Size.x + 1, placeableObject.Size.y + 1, placeableObject.Size.z);
 
-        TileBase[] baseArray = GetTilesBlock(area, GroundTilemap);
-
+        TileBase[] baseArray = GetTilesBlock(area, groundTilemap);
         foreach (var b in baseArray)
         {
             if (b == whiteTile)
@@ -140,7 +149,7 @@ public class BuildingSystem : MonoBehaviour
 
     public void TakeArea(Vector3Int start, Vector3Int size)
     {
-        GroundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
+        groundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
     }
 
     #endregion
@@ -155,7 +164,7 @@ public class BuildingSystem : MonoBehaviour
             if (CanBePlaced(objectToPlace))
             {
                 objectToPlace.Place();
-                Vector3Int start = gridLayout.WorldToCell(objectToPlace.GetStartPosition());
+                Vector3Int start = Cur_gridLayout.WorldToCell(objectToPlace.GetStartPosition());
                 TakeArea(start, objectToPlace.Size);
                 objectToPlace = null;
             }
