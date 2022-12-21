@@ -80,11 +80,6 @@ public class BuildingSystem : MonoBehaviour
 
 
     #region Utils
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="_HangOnWall">¥i¥H±¾Àð¤W?</param>
-    /// <returns></returns>
 
     public static Vector3 GetMouseWorldPosition()
     {
@@ -144,10 +139,10 @@ public class BuildingSystem : MonoBehaviour
     public void InitializeWithObject(GameObject prefab)
     {
         Vector3 position = SnapCoordinateToGrid(Vector3.zero);
-
         GameObject obj = Instantiate(prefab, position, Quaternion.identity);
         objectToPlace = obj.GetComponent<PlaceableObject>();
-        obj.AddComponent<ObjectDrag>();
+        objectToPlace.Drag(true);
+        //obj.AddComponent<ObjectDrag>();
     }
 
     private bool CanBePlaced(PlaceableObject placeableObject)

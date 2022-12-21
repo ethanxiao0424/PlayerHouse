@@ -8,6 +8,9 @@ public class PlaceableObject : MonoBehaviour
     public Vector3Int Size { get; private set; }
     private Vector3[] Vertices;
 
+    private Vector3 offset;
+    private bool drag;
+
     /// <summary>
     /// 取BoxCollider頂點位置
     /// </summary>
@@ -38,7 +41,10 @@ public class PlaceableObject : MonoBehaviour
                                 Mathf.Abs((vertices[0] - vertices[3]).y),
                                 1);
     }
-
+    /// <summary>
+    /// 取頂點0位置
+    /// </summary>
+    /// <returns></returns>
     public Vector3 GetStartPosition()
     {
         return transform.TransformPoint(Vertices[0]);
@@ -49,6 +55,21 @@ public class PlaceableObject : MonoBehaviour
         GetColliderVertexPositionsLocal();
         CalculateSizeInCells();
     }
+
+    private void OnMouseDown()
+    {
+        if(drag) offset = transform.position - BuildingSystem.GetMouseWorldPosition();
+    }
+
+    private void OnMouseDrag()
+    {
+        if (drag)
+        {
+            Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
+            transform.position = BuildingSystem.current.SnapCoordinateToGrid(pos);
+        }
+    }
+
 
     public void Rotate()
     {
@@ -63,6 +84,11 @@ public class PlaceableObject : MonoBehaviour
         }
 
         Vertices = vertices;
+    }
+
+    public void Drag(bool _CanBeDragged)
+    {
+        drag = _CanBeDragged;
     }
 
     /// <summary>
@@ -82,7 +108,7 @@ public class PlaceableObject : MonoBehaviour
     //        }
     //        Vertices = vertices;
     //    }
-        
+
     //    else if (LayerMask == 1 << 8)
     //    {
     //        transform.Rotate(new Vector3(0, 0, 0));
@@ -98,11 +124,8 @@ public class PlaceableObject : MonoBehaviour
 
     public virtual void Place()
     {
-        ObjectDrag drag = gameObject.GetComponent<ObjectDrag>();
-        Destroy(drag);
-
         Placed = true;
-
+        Drag(false);
         //invoke events of placement
     }
 }
