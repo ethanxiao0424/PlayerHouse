@@ -7,9 +7,11 @@ public class PlaceableObject : MonoBehaviour
     public bool Placed { get; private set; }
     public Vector3Int Size { get; private set; }
     private Vector3[] Vertices;
-
     private Vector3 offset;
     private bool drag;
+    private BuildingSystem bs;
+    private int routeTimes = 0;
+
 
     /// <summary>
     /// 取BoxCollider頂點位置
@@ -49,41 +51,69 @@ public class PlaceableObject : MonoBehaviour
     {
         return transform.TransformPoint(Vertices[0]);
     }
-
+    private void Awake()
+    {
+        bs = GameObject.FindGameObjectWithTag("BuildManager").GetComponent<BuildingSystem>();
+        GetColliderVertexPositionsLocal();
+    }
     private void Start()
     {
-        GetColliderVertexPositionsLocal();
         CalculateSizeInCells();
     }
 
     private void OnMouseDown()
     {
-        if(drag) offset = transform.position - BuildingSystem.GetMouseWorldPosition();
+        if(drag) offset = transform.position - bs.GetMouseWorldPosition();
     }
 
     private void OnMouseDrag()
     {
         if (drag)
         {
-            Vector3 pos = BuildingSystem.GetMouseWorldPosition() + offset;
+            Vector3 pos = bs.GetMouseWorldPosition() + offset;
             transform.position = BuildingSystem.current.SnapCoordinateToGrid(pos);
         }
     }
 
-
+    /// <summary>
+    /// 旋轉
+    /// </summary>
     public void Rotate()
     {
+        routeTimes++;
         transform.Rotate(new Vector3(0, 90, 0));
-        Size = new Vector3Int(Size.y, Size.x, 1);
-
+        Size = new Vector3Int(Size.y, Size.x, Size.z);
         Vector3[] vertices = new Vector3[Vertices.Length];
-
-        for(int i = 0; i < vertices.Length; i++)
+        for (int i = 0; i < vertices.Length; i++)
         {
             vertices[i] = Vertices[(i + 1) % Vertices.Length];
         }
-
         Vertices = vertices;
+        Debug.Log(Size);
+    }
+    /// <summary>
+    /// 轉到左邊牆
+    /// </summary>
+    public void RotateL()
+    {
+        transform.Rotate(new Vector3(270, 0, 0));
+        //Size = new Vector3Int(Size.x, Size.z, Size.y);
+        Debug.Log(Size);
+    }
+    /// <summary>
+    /// 轉到右邊牆
+    /// </summary>
+    public void RotateR()
+    {
+        transform.Rotate(new Vector3(0, 0, 90));
+        //Size = new Vector3Int(Size.x, Size.z, Size.y);
+        Debug.Log(Size);
+    }
+
+    public void ResetRotate()
+    {
+        transform.rotation= Quaternion.identity;
+        Debug.Log(Size);
     }
 
     public void Drag(bool _CanBeDragged)
@@ -91,41 +121,11 @@ public class PlaceableObject : MonoBehaviour
         drag = _CanBeDragged;
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="LayerMask">物件放置的地方</param>
-    //public void Straight(int LayerMask=1<<6)
-    //{
-    //    if (LayerMask == 1 << 7)
-    //    {
-    //        transform.Rotate(new Vector3(-90, 0, 0));
-    //        Size = new Vector3Int(Size.y, Size.x, 1);
-    //        Vector3[] vertices = new Vector3[Vertices.Length];
-    //        for (int i = 0; i < vertices.Length; i++)
-    //        {
-    //            vertices[i] = Vertices[(i + 1) % Vertices.Length];
-    //        }
-    //        Vertices = vertices;
-    //    }
-
-    //    else if (LayerMask == 1 << 8)
-    //    {
-    //        transform.Rotate(new Vector3(0, 0, 0));
-    //        Size = new Vector3Int(Size.y, Size.x, 1);
-    //        Vector3[] vertices = new Vector3[Vertices.Length];
-    //        for (int i = 0; i < vertices.Length; i++)
-    //        {
-    //            vertices[i] = Vertices[(i + 1) % Vertices.Length];
-    //        }
-    //        Vertices = vertices;
-    //    }
-    //}
-
     public virtual void Place()
     {
         Placed = true;
         Drag(false);
+        routeTimes = 0;
         //invoke events of placement
     }
 }

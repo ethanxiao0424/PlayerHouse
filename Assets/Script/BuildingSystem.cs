@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+
 public class BuildingSystem : MonoBehaviour
 {
     public static BuildingSystem current;
@@ -16,11 +17,15 @@ public class BuildingSystem : MonoBehaviour
     private Grid leftWallGrid;
     private Grid rightWallGrid;
 
-    [SerializeField] private Tilemap Cur_groundTilemap;
+    [SerializeField] private Tilemap Cur_Tilemap;
     [SerializeField] private Tilemap groundTilemap;
     [SerializeField] private Tilemap leftWallTilemap;
     [SerializeField] private Tilemap rightWallTilemap;
+
     [SerializeField] private TileBase whiteTile;
+    [SerializeField] private TileBase GreenTile;
+
+    [SerializeField] private GridTilemap gridTilemap;
 
     public GameObject prefab1;
     public GameObject prefab2;
@@ -28,8 +33,15 @@ public class BuildingSystem : MonoBehaviour
 
     [SerializeField] public PlaceableObject objectToPlace;
     [SerializeField] private bool HangOnTheWall;
+    [SerializeField] private GameObject cube;
 
 
+    public enum GridTilemap
+    {
+        Ground,
+        LeftWall,
+        RightWall
+    }
 
     #region Unity methods
 
@@ -65,6 +77,10 @@ public class BuildingSystem : MonoBehaviour
         {
             SwitchGridLayout(groundGrid, groundTilemap, groundTilemap);
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            
+        }
 
         if (!objectToPlace)
         {
@@ -81,12 +97,41 @@ public class BuildingSystem : MonoBehaviour
 
     #region Utils
 
-    public static Vector3 GetMouseWorldPosition()
+    public Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         //if (Physics.Raycast(ray, out RaycastHit raycastHit, 100, 1<<6))
-        if (Physics.Raycast(ray, out RaycastHit raycastHit))
+        if (Physics.Raycast(ray, out RaycastHit raycastHit,100,1<<6))
         {
+            if(gridTilemap!= GridTilemap.Ground)
+            {
+                SwitchGridLayout(groundGrid, groundTilemap, groundTilemap);
+                gridTilemap = GridTilemap.Ground;
+                objectToPlace.ResetRotate();
+            }    
+            return raycastHit.point;
+        }
+        else if(Physics.Raycast(ray, out raycastHit, 100, 1 << 7))
+        {
+            if (gridTilemap != GridTilemap.LeftWall)
+            {
+                SwitchGridLayout(leftWallGrid, leftWallTilemap, leftWallTilemap);
+                gridTilemap = GridTilemap.LeftWall;
+
+                objectToPlace.ResetRotate();
+                objectToPlace.RotateL();
+            }
+            return raycastHit.point;
+        }
+        else if(Physics.Raycast(ray, out raycastHit, 100, 1 << 8))
+        {
+            if (gridTilemap != GridTilemap.RightWall)
+            {
+                SwitchGridLayout(rightWallGrid, rightWallTilemap, rightWallTilemap);
+                gridTilemap = GridTilemap.RightWall;
+                objectToPlace.ResetRotate();
+                objectToPlace.RotateR();
+            }
             return raycastHit.point;
         }
         else
@@ -113,7 +158,7 @@ public class BuildingSystem : MonoBehaviour
     /// <param name="area"></param>
     /// <param name="tilemap"></param>
     /// <returns></returns>
-    private static TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
+    private TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
     {
         TileBase[] array = new TileBase[area.size.x * area.size.y * area.size.z];
         int counter = 0;
@@ -142,7 +187,30 @@ public class BuildingSystem : MonoBehaviour
         GameObject obj = Instantiate(prefab, position, Quaternion.identity);
         objectToPlace = obj.GetComponent<PlaceableObject>();
         objectToPlace.Drag(true);
-        //obj.AddComponent<ObjectDrag>();
+
+        switch (gridTilemap)
+        {
+            case GridTilemap.Ground:
+
+                break;
+
+            case GridTilemap.LeftWall:
+                objectToPlace.RotateL();
+                break;
+
+            case GridTilemap.RightWall:
+                objectToPlace.RotateR();
+                break;
+
+            default:
+                break;
+
+        }
+    }
+
+    private void FollowBuilding()
+    {
+
     }
 
     private bool CanBePlaced(PlaceableObject placeableObject)
@@ -150,9 +218,10 @@ public class BuildingSystem : MonoBehaviour
         BoundsInt area = new BoundsInt();
         area.position = Cur_gridLayout.WorldToCell(objectToPlace.GetStartPosition());
         //area.size = new Vector3Int(area.size.x + 1, area.size.y + 1, area.size.z);
-        area.size = new Vector3Int(placeableObject.Size.x + 1, placeableObject.Size.y + 1, placeableObject.Size.z);
+        area.size = new Vector3Int(placeableObject.Size.x, placeableObject.Size.y, placeableObject.Size.z);
 
-        TileBase[] baseArray = GetTilesBlock(area, Cur_groundTilemap);
+        TileBase[] baseArray = GetTilesBlock(area, Cur_Tilemap);
+
         foreach (var b in baseArray)
         {
             if (b == whiteTile)
@@ -165,7 +234,7 @@ public class BuildingSystem : MonoBehaviour
 
     public void TakeArea(Vector3Int start, Vector3Int size)
     {
-        Cur_groundTilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
+        Cur_Tilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
     }
 
     #endregion
@@ -193,6 +262,14 @@ public class BuildingSystem : MonoBehaviour
         {
             objectToPlace.Rotate();
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            objectToPlace.RotateL();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha7))
+        {
+            objectToPlace.RotateR();
+        }
         else if (Input.GetKeyDown(KeyCode.Escape))
         {
             Destroy(objectToPlace.gameObject);
@@ -203,7 +280,7 @@ public class BuildingSystem : MonoBehaviour
     {
             grid = _Grid;
             Cur_gridLayout = _gridLayout;
-            Cur_groundTilemap = _tilemap;
+            Cur_Tilemap = _tilemap;
     }
 
     #endregion
