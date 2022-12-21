@@ -19,6 +19,7 @@ public class BuildingSystem : MonoBehaviour
 
     [SerializeField] private Tilemap Cur_Tilemap;
     [SerializeField] private Tilemap groundTilemap;
+    [SerializeField] private Tilemap groundTilemap_Temp;
     [SerializeField] private Tilemap leftWallTilemap;
     [SerializeField] private Tilemap rightWallTilemap;
 
@@ -30,17 +31,23 @@ public class BuildingSystem : MonoBehaviour
     public GameObject prefab1;
     public GameObject prefab2;
 
-
     [SerializeField] public PlaceableObject objectToPlace;
     [SerializeField] private bool HangOnTheWall;
     [SerializeField] private GameObject cube;
 
-
+    private static Dictionary<TileType, TileBase> tileBases = new Dictionary<TileType, TileBase>();
     public enum GridTilemap
     {
         Ground,
         LeftWall,
         RightWall
+    }
+    public enum TileType
+    {
+        Empty,
+        White,
+        Green,
+        Red
     }
 
     #region Unity methods
@@ -53,7 +60,14 @@ public class BuildingSystem : MonoBehaviour
         leftWallGrid = leftWallGridLayout.gameObject.GetComponent<Grid>();
         rightWallGrid = rightWallGridLayout.gameObject.GetComponent<Grid>();
     }
-
+    private void Start()
+    {
+        string tilePath = @"Tiles\";
+        tileBases.Add(TileType.Empty, null);
+        tileBases.Add(TileType.White, Resources.Load<TileBase>(tilePath + "white"));
+        tileBases.Add(TileType.Green, Resources.Load<TileBase>(tilePath + "green"));
+        tileBases.Add(TileType.Red, Resources.Load<TileBase>(tilePath + "red"));
+    }
     private void Update()
     {
 
@@ -153,11 +167,11 @@ public class BuildingSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// 取得Tiles全部的格子數
     /// </summary>
     /// <param name="area"></param>
     /// <param name="tilemap"></param>
-    /// <returns></returns>
+    /// <returns>陣列</returns>
     private TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
     {
         TileBase[] array = new TileBase[area.size.x * area.size.y * area.size.z];
@@ -171,6 +185,21 @@ public class BuildingSystem : MonoBehaviour
         }
 
         return array;
+    }
+    private void FillTiles(TileBase[] arr,TileType type)
+    {
+        for(int i = 0; i < arr.Length; i++)
+        {
+            arr[i] = tileBases[type];
+        }
+    }
+
+    private void SetTilesBlock(BoundsInt area,TileType type,Tilemap tilemap)
+    {
+        int size = area.size.x * area.size.y * area.size.z;
+        TileBase[] tileArray = new TileBase[size];
+        FillTiles(tileArray, type);
+        tilemap.SetTilesBlock(area, tileArray);
     }
 
 
@@ -210,9 +239,34 @@ public class BuildingSystem : MonoBehaviour
 
     private void FollowBuilding()
     {
+        BoundsInt buildingArea = new BoundsInt();
+        buildingArea.position = Cur_gridLayout.WorldToCell(objectToPlace.GetStartPosition());
 
+        TileBase[] baseArray = GetTilesBlock(buildingArea, Cur_Tilemap);
+
+        int size = baseArray.Length;
+        TileBase[] tileArray = new TileBase[size];
+
+        for(int i = 0; i < baseArray.Length; i++)
+        {
+            if (baseArray[i] == tileBases[TileType.White])
+            {
+                tileArray[i] = tileBases[TileType.Green];
+            }
+            else
+            {
+                FillTiles(tileArray, TileType.Red);
+                break;
+            }
+        }
+       // SetTilesBlock(buildingArea, tileArray);
+        
     }
-
+    /// <summary>
+    /// 檢查擺放的物件能否放置
+    /// </summary>
+    /// <param name="placeableObject"></param>
+    /// <returns></returns>
     private bool CanBePlaced(PlaceableObject placeableObject)
     {
         BoundsInt area = new BoundsInt();
@@ -236,6 +290,7 @@ public class BuildingSystem : MonoBehaviour
     {
         Cur_Tilemap.BoxFill(start, whiteTile, start.x, start.y, start.x + size.x, start.y + size.y);
     }
+
 
     #endregion
 
